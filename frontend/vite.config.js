@@ -10,6 +10,15 @@ export default defineConfig({
     vue(),
     vueDevTools(),
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080', // 백엔드 주소
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

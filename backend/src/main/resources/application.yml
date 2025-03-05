@@ -1,0 +1,30 @@
+server:
+  port: 8080
+  servlet:
+    encoding:
+      force-response: true # 인코딩 강제 설정 (한글 깨짐 방지)
+
+spring:
+  application:
+    name: jigaknono # 애플리케이션 이름
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/jigaknono
+    username: postgres
+    password: 1234
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update # 테이블 자동 생성
+    show-sql: true     # SQL 쿼리 표시
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  web:
+    cors: # Vue에서 API 호출 시 CORS 에러 발생 방지
+      allowed-origins: "http://localhost:5173"
+      allowed-methods: "*"
+      allowed-headers: "*"
+      allow-credentials: true

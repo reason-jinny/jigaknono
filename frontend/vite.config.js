@@ -11,11 +11,13 @@ export default defineConfig({
     vueDevTools(),
   ],
   server: {
+    cors: true, // 추가
     proxy: {
       '/api': {
         target: 'http://localhost:8080', // 백엔드 주소
         changeOrigin: true,
-        secure: false
+        secure: false,
+        rewrite: (path) => {return path.replace(/^\/api/, '')} // 추가
       }
     }
   },

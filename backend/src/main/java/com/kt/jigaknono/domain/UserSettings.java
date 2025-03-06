@@ -17,6 +17,9 @@ public class UserSettings {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "session_id", unique = true) // 고유 세션 ID, Unique 설정
+    private String sessionId;
+
     private String currentLocation;
 
     private String destination = "KT판교빌딩"; // 기본값 설정

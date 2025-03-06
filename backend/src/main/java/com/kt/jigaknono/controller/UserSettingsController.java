@@ -2,6 +2,9 @@ package com.kt.jigaknono.controller;
 
 import com.kt.jigaknono.domain.UserSettings;
 import com.kt.jigaknono.service.UserSettingsService;
+
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +27,9 @@ public class UserSettingsController {
     // 세션 ID로 설정 조회
     @GetMapping("/{sessionId}")
     public ResponseEntity<UserSettings> getUserSettingsBySessionId(@PathVariable String sessionId) {
-        UserSettings userSettings = userSettingsService.getUserSettingsBySessionId(sessionId);
-        return userSettings != null
-                ? new ResponseEntity<>(userSettings, HttpStatus.OK)
-                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        Optional<UserSettings> userSettings = userSettingsService.getUserSettingsBySessionId(sessionId);
+        // Optional이 비어있지 않을 때 (데이터가 있을 때)
+        return userSettings.map(settings -> new ResponseEntity<>(settings, HttpStatus.OK))
+                        .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 }

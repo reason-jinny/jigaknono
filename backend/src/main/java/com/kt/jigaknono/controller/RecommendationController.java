@@ -1,41 +1,34 @@
 package com.kt.jigaknono.controller;
 
-import com.kt.jigaknono.domain.UserSettings;
-import com.kt.jigaknono.service.UserSettingsService;
+import com.kt.jigaknono.service.RecommendationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/recommendation")
+// @RequestMapping("/api/recommendation")
 public class RecommendationController {
 
     @Autowired
-    private UserSettingsService userSettingsService;
+    private RecommendationService recommendationService;  // 🔵 RecommendationService 사용
 
     // 추천 경로 및 출발 시간 조회
-    @GetMapping("/{sessionId}")
-    public ResponseEntity<String> getRecommendation(@PathVariable String sessionId) {
-        Optional<UserSettings> userSettingsOptional = userSettingsService.getUserSettingsBySessionId(sessionId);
-        
-        if (userSettingsOptional.isPresent()) {
-            UserSettings userSettings = userSettingsOptional.get();
-            String preference = userSettings.getPreference();
-            String recommendation;
+    @GetMapping("/api/recommendation")
+    public ResponseEntity<Map<String, Object>> getRecommendation(
+            @RequestParam String currentLocation,
+            @RequestParam String targetArrivalTimeStr) {
 
-            // 편안함을 선택하면 셔틀을 타는 기준, 빠른 도착은 가장 빠른 루트
-            if ("편안함".equals(preference)) {
-                recommendation = "셔틀 기준으로 출발 시간을 계산합니다.";
-            } else {
-                recommendation = "가장 빠른 루트 기준으로 출발 시간을 계산합니다.";
-            }
+        // 🔄 추천 경로 및 시간 계산
+        Map<String, Object> result = recommendationService.recommendRoute(currentLocation, targetArrivalTimeStr);
 
-            return new ResponseEntity<>(recommendation, HttpStatus.OK);
+        // 🔄 에러 처리 및 응답
+        if ("error".equals(result.get("status"))) {
+            return new ResponseEntity<>(result, HttpStatus.NOT_FOUND); // 에러 시 404 반환
         } else {
-            return new ResponseEntity<>("사용자 설정을 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(result, HttpStatus.OK); // 정상 시 200 반환
         }
     }
 }

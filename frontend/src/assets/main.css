@@ -1,1 +1,66 @@
-/* 📁 main.css: 전체 스타일용 (공통 스타일, 전체 레이아웃 등) */
+/* 📁 main.css: 전체 스타일용 (공통 스타일, 전체 레이아웃 등)
+
+/* 📁 /src/assets/main.css */
+
+/* 기본 글꼴 및 배경 설정 */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+/* 공통 클래스 */
+.input {
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 8px;
+    transition: all 0.2s;
+}
+
+.input:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.button-primary {
+    background-color: #3b82f6;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.button-primary:hover {
+    background-color: #2563eb;
+}
+
+.card {
+    background-color: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.card-header {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.card-body {
+    font-size: 0.875rem;
+    color: #4a5568;
+}
+
+.alert-error {
+    background-color: #fef2f2;
+    border: 1px solid #fee2e2;
+    color: #dc2626;
+    padding: 16px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+}

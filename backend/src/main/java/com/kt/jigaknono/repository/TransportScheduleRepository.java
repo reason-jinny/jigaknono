@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface TransportScheduleRepository extends JpaRepository<TransportSchedule, Long> {
 
     // 📌 출발 위치와 도착 위치 + 목표 도착 시간 이전의 스케줄 중 가장 늦은 출발 시간 조회
-    Optional<TransportSchedule> findTopByStartLocationAndEndLocationAndArrivalTimeBeforeOrderByDepartureTimeDesc(
+    Optional<TransportSchedule> findTopByStartLocationContainingAndEndLocationAndArrivalTimeBeforeOrderByDepartureTimeDesc(
             String startLocation, String endLocation, LocalTime targetArrivalTime);
 }
 

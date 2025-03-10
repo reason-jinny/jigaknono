@@ -2,15 +2,30 @@
   <div class="container">
     <h1 class="title">출발지와 도착 시간을 선택하세요!</h1>
     <div class="form-group">
-      <label class="label">출발지</label>
-      <select v-model="currentLocation" class="input">
-        <option value="">출발지를 선택하세요</option>
-        <option value="판교역">판교역</option>
+      <!-- <label class="label">출발지</label> -->
+      <!-- <select v-model="currentLocation" class="input">
+        <option value="">출발지를 선택하세요</option> -->
+        <!-- 1. 출발지 선택 -> 라디오 버튼으로 수정 -->
+        <!-- <option value="판교역">판교역</option>
         <option value="청계산입구역">청계산입구역</option>
-      </select>
-    </div>
+      </select> -->
+      <div class="form-group">
+        <label class="label"><p><strong>출발지</strong></p></label>
+          <div>
+            <label>
+              <input type="radio" value="판교역" v-model="currentLocation" />
+              판교역
+            </label>
+            <label>
+              <input type="radio" value="청계산입구역" v-model="currentLocation" />
+              청계산입구역
+            </label>
+          </div>
+        </div>
+      </div>
     <div class="form-group">
-      <label class="label">목표 도착 시간</label>
+      <label class="label"><p><strong>목표 도착 시간</strong></p></label>
+      <!-- 2. 오전/오후 선택 없이 24시간제로 수정 -->
       <input type="time" v-model="targetArrivalTimeStr" class="input" />
     </div>
     <button @click="getRecommendation" class="button-primary">경로 추천받기</button>
@@ -18,9 +33,17 @@
     <div v-if="recommendation" class="card">
       <h2 class="card-header">추천 경로</h2>
       <div class="card-body">
-        <p><strong>출발 시간:</strong> {{ recommendation.departureTime }}</p>
+        <!-- 출발 시간, 도착 시간 시간:분 까지만 표시로 수정 -->
+        <!-- <p><strong>출발 시간:</strong> {{ recommendation.departureTime }}</p>
         <p><strong>도착 시간:</strong> {{ recommendation.arrivalTime }}</p>
         <p><strong>경로:</strong> {{ recommendation.recommendedRoute }}</p>
+        <p>{{ recommendation.departureTime }}까지 {{ recommendation.startLocation }}에 도착해서 {{ recommendation.routeNumber }}를 탑승하세요!</p> -->
+        <p><strong>출발 시간:</strong> {{ formatTime(recommendation.departureTime) }}</p>
+        <p><strong>도착 시간:</strong> {{ formatTime(recommendation.arrivalTime) }}</p>
+        <p>{{ formatTime(recommendation.arrivalTime) }}까지
+          {{ recommendation.startLocation }}에 도착하셔서,
+          {{ recommendation.routeNumber }}를 탑승하세요!
+        </p>
       </div>
     </div>
 
@@ -42,6 +65,23 @@ export default {
       error: null,
     };
   },
+  // methods: {
+  //   async getRecommendation() {
+  //     try {
+  //       const response = await axios.get('http://localhost:8080/api/recommendation', {
+  //         params: {
+  //           currentLocation: this.currentLocation,
+  //           targetArrivalTimeStr: this.targetArrivalTimeStr,
+  //         },
+  //       });
+  //       this.recommendation = response.data;
+  //       this.error = null;
+  //     } catch (err) {
+  //       this.error = err.response?.data?.message || '추천 경로를 찾을 수 없습니다.';
+  //       this.recommendation = null;
+  //     }
+  //   },
+  // },
   methods: {
     async getRecommendation() {
       try {
@@ -57,6 +97,10 @@ export default {
         this.error = err.response?.data?.message || '추천 경로를 찾을 수 없습니다.';
         this.recommendation = null;
       }
+    },
+    formatTime(timeStr) {
+      // timeStr가 존재하면 앞의 5글자(예: "08:30:00" -> "08:30")만 반환합니다.
+      return timeStr ? timeStr.slice(0, 5) : '';
     },
   },
 };

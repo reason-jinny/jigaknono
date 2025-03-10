@@ -1,6 +1,7 @@
 <template>
   <div class="container">
-    <h1 class="title">출발지와 도착 시간을 선택하세요!</h1>
+    <h1 class="title">지각노노: KT판교빌딩 출근 도우미</h1>
+    <h3 class="label">출발지와 도착 시간을 선택하세요!</h3>
     <div class="form-group">
       <div class="form-group">
         <label class="label"><p><strong>출발지</strong></p></label>
@@ -28,11 +29,11 @@
       <div class="card-body">
         <p><strong>출발 시간:</strong> {{ formatTime(recommendation.departureTime) }}</p>
         <p><strong>도착 시간:</strong> {{ formatTime(recommendation.arrivalTime) }}</p>
-        <p>{{ formatTime(recommendation.departureTime) }}까지
-          {{ recommendation.startLocation }}에 도착하셔서,
-          {{ recommendation.routeNumber }}{{ getJosa(recommendation.routeNumber) }} 탑승하세요!
+        <p><strong>{{ formatTime(recommendation.departureTime) }}</strong>까지
+          <strong>{{ recommendation.startLocation }}</strong>에 도착하셔서,
+          <strong>{{ recommendation.routeNumber }}{{ isNumber(recommendation.routeNumber) ? '번 버스' : '' }}</strong>{{ getJosa(recommendation.routeNumber) }} 탑승하세요!
         </p>
-        <p>이거 놓치면 지각~😖</p>
+        <p>이거 놓치면 지각~😖🔥🔥🔥</p>
       </div>
     </div>
     <div class="button-container">
@@ -80,6 +81,9 @@ export default {
     formatTime(timeStr) {
       // timeStr가 존재하면 앞의 5글자(예: "08:30:00" -> "08:30")만 반환합니다.
       return timeStr ? timeStr.slice(0, 5) : '';
+    },
+    isNumber(value) {
+      return !isNaN(value) && typeof value !== 'boolean';
     },
     getJosa(text) {
       if (typeof text === 'number') return '를';

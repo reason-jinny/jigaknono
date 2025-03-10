@@ -36,6 +36,9 @@
         <p>이거 놓치면 지각~😖🔥🔥🔥</p>
       </div>
     </div>
+    <div v-if="error" class="alert-error">
+      <p>{{ error }}</p>
+    </div>
     <div class="button-container">
       <button @click="openNaverMapToCheonggye" class="nav-button">
         우리집에서 청계산입구역까지는 얼마나 걸리지?
@@ -43,9 +46,6 @@
       <button @click="openNaverMapToPangyo" class="nav-button">
         우리집에서 판교역까지는 얼마나 걸리지?
       </button>
-    </div>
-    <div v-if="error" class="alert-error">
-      <p>{{ error }}</p>
     </div>
   </div>
 </template>

@@ -17,15 +17,25 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update # 테이블 자동 생성
-    show-sql: true     # SQL 쿼리 표시
     properties:
       hibernate:
+        format_sql: true  # SQL 쿼리 포맷팅
+        show_sql: true       # SQL 쿼리 표시
         dialect: org.hibernate.dialect.PostgreSQLDialect
+      open-in-view: false
 
-  web:
-    cors: # Vue에서 API 호출 시 CORS 에러 발생 방지
-      # allowed-origins: "http://localhost:5173, http://127.0.0.1:5173"
-      allowed-origins: "*" # 👉 모든 출처 허용
-      allowed-methods: "*" # 👉 모든 HTTP 메서드 허용
-      allowed-headers: "*" # 👉 모든 헤더 허용
-      allow-credentials: true # 👉 쿠키 전송 허용
+  mvc:
+    cors:
+      mapping: "/**"
+      allowed-origins: "*"
+      allowed-methods: "*"
+      allowed-headers: "*"
+      allow-credentials: true
+
+  # web:
+  #   cors: # Vue에서 API 호출 시 CORS 에러 발생 방지
+  #     # allowed-origins: "http://localhost:5173, http://127.0.0.1:5173"
+  #     allowed-origins: "*" # 👉 모든 출처 허용
+  #     allowed-methods: "*" # 👉 모든 HTTP 메서드 허용
+  #     allowed-headers: "*" # 👉 모든 헤더 허용
+  #     allow-credentials: true # 👉 쿠키 전송 허용

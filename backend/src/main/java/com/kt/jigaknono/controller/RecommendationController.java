@@ -9,12 +9,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-// @RequestMapping("/api/recommendation")
+@RequestMapping
 @CrossOrigin(origins = { "http://localhost:5173", "http://127.0.0.1:5173" })
+
 public class RecommendationController {
 
     @Autowired
-    private RecommendationService recommendationService;  // 🔵 RecommendationService 사용
+    private RecommendationService recommendationService;
 
     // 추천 경로 및 출발 시간 조회
     @GetMapping("/api/recommendation")

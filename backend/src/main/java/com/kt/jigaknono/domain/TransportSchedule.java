@@ -26,22 +26,22 @@ public class TransportSchedule {
     private String startLocation; // 출발지 - 예: 청계산입구역, 판교역
 
     @Column(name = "end_location")
-    private String endLocation = "KT판교빌딩"; // 도착지 - 기본값으로 KT판교빌딩 설정
+    private String endLocation;
 
     @Column(name = "departure_time")
     private LocalTime departureTime; // 출발 시간
 
-    @Column(name = "arrival_time")
-    private LocalTime arrivalTime; // 도착 시간
-    // 도착 시간 = 출발 시간 + 기본 소요 시간 + 교통 지연 시간 + 도보 소요 시간
-    // 인데 우선 그냥 하나의 데이터로 넣어서 만든 후 세분화 예정
+    @Column(name = "duration")
+    private Integer duration;  // 기본 소요 시간 (분)
 
-    // @Column(name = "base_duration")
-    // private Integer baseDuration; // 기본 소요 시간 (분)
+    @Column(name = "traffic_delay")
+    private Integer trafficDelay;  // 교통 지연 시간 (분)
 
-    // @Column(name = "traffic_delay")
-    // private int trafficDelay = 0; // 교통 지연 시간 (기본값 0)
+    @Column(name = "walk_duration")
+    private Integer walkDuration;  // 도보 소요 시간 (분)
 
-    // @Column(name = "walk_duration")
-    // private int walkDuration = 0; // 도보 소요 시간 (기본값 0)
+    @Column(name = "walk_distance")
+    private Integer walkDistance;  // 도보 거리 (미터)
+
+    // 🔄 도착 시간 계산 메서드 제거 (Service로 이동)
 }

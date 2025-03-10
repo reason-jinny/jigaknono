@@ -8,9 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -19,6 +17,14 @@ public class RecommendationService {
 
     @Autowired 
     private TransportScheduleRepository transportScheduleRepository;
+
+    // 🔄 도착 시간 계산
+    public LocalTime calculateArrivalTime(TransportSchedule schedule) {
+        return schedule.getDepartureTime()
+                .plusMinutes(Optional.ofNullable(schedule.getDuration()).orElse(0))
+                .plusMinutes(Optional.ofNullable(schedule.getTrafficDelay()).orElse(0))
+                .plusMinutes(Optional.ofNullable(schedule.getWalkDuration()).orElse(0));
+    }
 
     // 🔄 경로 추천 및 출발 시간 계산
     public Map<String, Object> recommendRoute(String currentLocation, String targetArriavalTimeStr) {
@@ -29,27 +35,17 @@ public class RecommendationService {
         // 출발지 이름 매핑
         String mappedLocation = mapLocation(currentLocation);
 
-        // 도착지 목록 - 여러 종류의 도착지를 모두 포함
-        List<String> possibleEndLocations = Arrays.asList(
-            "KT판교빌딩", 
-            "스마트모빌리티실증허브",
-            "벤처타운(남문)"
-        );
-
         // 가능한 모든 도착지에 대해 스케줄 검색
-        Optional<TransportSchedule> optionalSchedule = possibleEndLocations.stream()
-            .map(endLocation -> transportScheduleRepository
-                .findTopByStartLocationContainingAndEndLocationAndArrivalTimeBeforeOrderByDepartureTimeDesc(
-                    mappedLocation, endLocation, targetArrivalTime))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .findFirst();
+        // 스케줄 검색 시 endLocation 파라미터 제거
+        Optional<TransportSchedule> optionalSchedule = transportScheduleRepository
+            .findTopByStartLocationContainingAndCalculatedArrivalTimeBeforeOrderByDepartureTimeDesc(
+                mappedLocation, targetArrivalTime);
 
         return optionalSchedule.map(schedule -> {
             // 데이터가 있을 때: schedule을 받아서 Map<String, Object> 형태로 가공
             Map<String, Object> result = new HashMap<>();
             result.put("departureTime", schedule.getDepartureTime());
-            result.put("arrivalTime", schedule.getArrivalTime());
+            result.put("arrivalTime", calculateArrivalTime(schedule)); // 🔄 Service에서 계산한 도착 시간
             result.put("startLocation", schedule.getStartLocation());
             result.put("routeNumber", schedule.getRouteNumber());
             result.put("recommendedRoute", schedule.getRouteType() + " " + schedule.getRouteNumber());

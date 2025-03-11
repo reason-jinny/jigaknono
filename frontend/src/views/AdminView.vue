@@ -23,9 +23,28 @@
     <div class="content-section">
       <div class="section-header">
         <h2 class="section-title">노선 목록</h2>
-        <button @click="openModal()" class="create-button">
-          <i class="fas fa-plus"></i> 새 노선 등록
-        </button>
+        <div class="header-actions">
+          <div class="search-container">
+            <div v-if="showSearch" class="search-box">
+              <input 
+                type="text" 
+                v-model="routeFilter" 
+                placeholder="노선 번호로 검색"
+                class="route-search"
+                ref="searchInput"
+              >
+              <button @click="clearSearch" class="clear-search">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <button @click="toggleSearch" class="search-button" :class="{ active: showSearch }">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+          <button @click="openModal()" class="create-button">
+            <i class="fas fa-plus"></i> 새 노선 등록
+          </button>
+        </div>
       </div>
 
       <div class="table-container">
@@ -44,7 +63,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="schedule in schedules" :key="schedule.id">
+            <tr v-for="schedule in filteredAndSortedSchedules" :key="schedule.id" :class="{ 'hover-row': true }">
               <td>
                 <span :class="['route-type-tag', schedule.routeType === 'SHUTTLE' ? 'shuttle' : 'bus']">
                   {{ getRouteTypeDisplay(schedule.routeType) }}
@@ -169,7 +188,9 @@ export default {
       schedules: [],
       currentSchedule: this.getEmptySchedule(),
       isEditing: false,
-      showModal: false
+      showModal: false,
+      showSearch: false,
+      routeFilter: '',
     };
   },
   
@@ -311,6 +332,65 @@ export default {
       }
 
       return true;
+    },
+
+    toggleSearch() {
+      this.showSearch = !this.showSearch;
+      if (this.showSearch) {
+        // 검색창이 나타나면 자동으로 포커스
+        this.$nextTick(() => {
+          this.$refs.searchInput.focus();
+        });
+      } else {
+        // 검색창이 사라질 때 필터 초기화
+        this.routeFilter = '';
+      }
+    },
+
+    clearSearch() {
+      this.routeFilter = '';
+      this.$refs.searchInput.focus();
+    },
+  },
+
+  computed: {
+    sortedSchedules() {
+      return [...this.schedules].sort((a, b) => {
+        // 1. 셔틀을 상단에 배치
+        if (a.routeType !== b.routeType) {
+          return a.routeType === 'SHUTTLE' ? -1 : 1;
+        }
+        
+        // 2. 출발지 기준 그룹핑
+        if (a.startLocation !== b.startLocation) {
+          return a.startLocation.localeCompare(b.startLocation);
+        }
+        
+        // 3. 출발 시간순 정렬
+        return a.departureTime.localeCompare(b.departureTime);
+      });
+    },
+
+    filteredAndSortedSchedules() {
+      let filtered = this.schedules;
+      
+      // 노선 번호 필터 적용
+      if (this.routeFilter) {
+        filtered = filtered.filter(schedule => 
+          schedule.routeNumber.toLowerCase().includes(this.routeFilter.toLowerCase())
+        );
+      }
+
+      // 정렬 로직 적용
+      return filtered.sort((a, b) => {
+        if (a.routeType !== b.routeType) {
+          return a.routeType === 'SHUTTLE' ? -1 : 1;
+        }
+        if (a.startLocation !== b.startLocation) {
+          return a.startLocation.localeCompare(b.startLocation);
+        }
+        return a.departureTime.localeCompare(b.departureTime);
+      });
     }
   },
 
@@ -428,6 +508,73 @@ export default {
   font-size: 1.25rem;
   color: #2c3e50;
   margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.route-search {
+  width: 200px;
+  padding: 0.5rem 2rem 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.clear-search {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.search-button {
+  padding: 0.5rem;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.search-button.active {
+  color: #17a2b8;
+}
+
+.search-button:hover {
+  color: #333;
+}
+
+/* 검색창 애니메이션 */
+.route-search {
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 0.3s ease;
+}
+
+.route-search.hidden {
+  opacity: 0;
+  transform: translateX(-10px);
+  pointer-events: none;
 }
 
 .create-button {
@@ -732,5 +879,23 @@ input[type="number"]::-webkit-inner-spin-button {
 .route-type-tag.shuttle {
   background-color: #e03131;  /* 빨간색 */
   color: white;
+}
+
+.schedule-table tr:hover {
+  background-color: #f8f9fa;  /* 연한 회색 배경 */
+  transition: background-color 0.2s ease;  /* 부드러운 전환 효과 */
+  cursor: default;  /* 클릭이 안되더라도 호버 중임을 표시 */
+}
+
+/* 테이블 행 사이 구분선 추가 */
+.schedule-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #dee2e6;
+  vertical-align: middle;
+}
+
+/* 마지막 행의 구분선 제거 */
+.schedule-table tr:last-child td {
+  border-bottom: none;
 }
 </style> 

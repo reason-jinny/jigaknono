@@ -881,21 +881,25 @@ input[type="number"]::-webkit-inner-spin-button {
   color: white;
 }
 
-.schedule-table tr:hover {
-  background-color: #f8f9fa;  /* 연한 회색 배경 */
-  transition: background-color 0.2s ease;  /* 부드러운 전환 효과 */
-  cursor: default;  /* 클릭이 안되더라도 호버 중임을 표시 */
+/* tbody의 행에만 호버 효과 적용 */
+.schedule-table tbody tr:hover {
+  background-color: #f8f9fa;
+  transition: background-color 0.2s ease;
+  cursor: default;
 }
 
-/* 테이블 행 사이 구분선 추가 */
-.schedule-table td {
+/* 테이블 헤더 스타일 */
+.schedule-table thead th {
+  background-color: #f8f9fa;  /* 헤더 배경색 */
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;  /* 헤더 아래 굵은 구분선 */
+}
+
+/* 데이터 행 스타일 */
+.schedule-table tbody td {
   padding: 0.75rem;
   border-bottom: 1px solid #dee2e6;
   vertical-align: middle;
-}
-
-/* 마지막 행의 구분선 제거 */
-.schedule-table tr:last-child td {
-  border-bottom: none;
 }
 </style> 

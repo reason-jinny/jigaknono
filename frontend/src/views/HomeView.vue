@@ -67,7 +67,7 @@
           <strong class="highlight-route">{{ recommendation.routeNumber }}{{ isKTShuttle(recommendation.routeNumber) ? '' : '번 버스' }}</strong>{{ getJosa(recommendation.routeNumber) }} 탑승하세요!
         </p>
         <p>이거 놓치면 지각~😖🔥🔥🔥</p>
-        <p v-if="isLateArrivalTime" class="weird-time-message">근데 왜 이 시간에 출근을...?😱</p>
+        <p v-if="recommendation && isLateArrivalTime" class="weird-time-message">근데 왜 이 시간에 출근을...?😱</p>
       </div>
     </div>
     <div v-if="error" class="alert-error">
@@ -144,6 +144,7 @@ export default {
     return {
       currentLocation: '',
       targetArrivalTimeStr: '',
+      submittedTargetArrivalTime: '', // 버튼 클릭 시 저장할 도착 시간
       recommendation: null,
       error: null,
       isRaining: false,
@@ -241,7 +242,7 @@ export default {
     },
     openNaverMapToCheonggye() {
       // 🟢 청계산입구역 링크
-      const url = "https://map.naver.com/p/directions/-/14143624.0533892,4501872.9388012,%EC%B2%AD%EA%B3%84%EC%82%B0%EC%9E%85%EA%B5%AC%EC%97%AD1%EB%B2%88%EC%B6%9C%EA%B5%AC,21406671,PLACE_POI/-/transit?c=15.00,0,0,0,dh";
+      const url = "https://map.naver.com/p/directions/-/14143624.0533892,4501872.9388012,%EC%B2%AD%EA%B3%84%EC%82%B0%EC%9E%85%EA%B5%AD%EC%97%AD1%EB%B2%88%EC%B6%9C%EA%B5%AC,21406671,PLACE_POI/-/transit?c=15.00,0,0,0,dh";
       window.open(url, "_blank");
     },
     openNaverMapToPangyo() {
@@ -291,89 +292,42 @@ export default {
 </script>
 
 <style scoped>
+/* 컨테이너 및 기본 레이아웃 */
 .container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .title {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 20px;
-    text-align: center;
-    color: black;
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+  text-align: center;
+  color: black;
 }
 
+/* 폼 요소 스타일링 */
 .form-group {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 .label {
-    display: block;
-    font-size: 16px;
-    margin-bottom: 8px;
-    color: black;
+  display: block;
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: black;
 }
 
 .input {
-    width: 100%;
-    max-width: 200px;
+  width: 100%;
+  max-width: 200px;
 }
 
-/* 라디오 버튼 그룹 스타일링 */
-.radio-group {
-    display: flex;
-    gap: 20px;
-    margin: 10px 0;
-}
-
-.radio-group label {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    cursor: pointer;
-}
-
-/* 버튼 컨테이너 */
-.button-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-.card {
-    background-color: white;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 20px;
-}
-
-.card-header {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-.card-body {
-    font-size: 14px;
-    color: #4a5568;
-}
-
-.alert-error {
-    background-color: #fef2f2;
-    border: 1px solid #fee2e2;
-    color: #dc2626;
-    padding: 10px;
-    border-radius: 4px;
-    margin-bottom: 20px;
-}
-
+/* 날씨 옵션 */
 .weather-options {
   display: flex;
   gap: 20px;
@@ -392,6 +346,44 @@ export default {
   height: 16px;
 }
 
+/* 버튼 스타일링 */
+.button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* 카드 및 결과 표시 */
+.card {
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.card-header {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.card-body {
+  font-size: 14px;
+  color: #4a5568;
+}
+
+/* 알림 및 경고 메시지 */
+.alert-error {
+  background-color: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: #dc2626;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
 .weather-warning {
   margin-top: 10px;
   padding: 10px;
@@ -405,6 +397,20 @@ export default {
   margin-right: 8px;
 }
 
+.validation-message {
+  color: #dc3545;
+  font-size: 0.9em;
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.weird-time-message {
+  color: #6c757d;
+  font-style: italic;
+  margin-top: 8px;
+}
+
+/* 필수/선택 표시 */
 .required {
   color: #dc3545;
   margin-left: 4px;
@@ -417,9 +423,9 @@ export default {
   margin-left: 4px;
 }
 
+/* 메인 안내 메시지 */
 .main-instruction {
-  margin-top: 15px;
-  margin-bottom: 15px;
+  margin: 15px 0;
   font-size: 1.2em;
   line-height: 1.6;
   padding: 15px;
@@ -438,19 +444,7 @@ export default {
   font-size: 1.1em;
 }
 
-.validation-message {
-  color: #dc3545;
-  font-size: 0.9em;
-  margin-top: 4px;
-  margin-bottom: 0;
-}
-
-.weird-time-message {
-  color: #6c757d;
-  font-style: italic;
-  margin-top: 8px;
-}
-
+/* 피드백 섹션 */
 .feedback-section {
   text-align: center;
   margin-top: 30px;
@@ -472,6 +466,7 @@ export default {
   color: #374151;
 }
 
+/* 모달 스타일링 */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -501,6 +496,7 @@ export default {
   color: #1f2937;
 }
 
+/* 피드백 폼 */
 .feedback-type {
   display: flex;
   flex-direction: column;
@@ -530,19 +526,23 @@ export default {
   margin-bottom: 20px;
 }
 
+/* 모달 푸터 버튼 */
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
 }
 
-.submit-button {
-  background-color: #2563eb;
-  color: white;
+.submit-button, .cancel-button {
   padding: 8px 16px;
   border-radius: 4px;
   border: none;
   cursor: pointer;
+}
+
+.submit-button {
+  background-color: #2563eb;
+  color: white;
 }
 
 .submit-button:disabled {
@@ -550,17 +550,13 @@ export default {
   cursor: not-allowed;
 }
 
+.submit-button:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
 .cancel-button {
   background-color: #e5e7eb;
   color: #4b5563;
-  padding: 8px 16px;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-}
-
-.submit-button:hover:not(:disabled) {
-  background-color: #1d4ed8;
 }
 
 .cancel-button:hover {

@@ -19,6 +19,8 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   data() {
     return {
@@ -28,13 +30,18 @@ export default {
     }
   },
   methods: {
-    login() {
-      // 실제 운영 환경에서는 이런 방식으로 하면 안 됩니다!
-      // 이것은 데모용 간단 인증입니다.
-      if (this.username === 'admin' && this.password === 'jigaknono123') {
-        localStorage.setItem('adminAuthenticated', 'true');
-        this.$router.push('/admin');
-      } else {
+    async login() {
+      try {
+        const response = await axios.post('http://localhost:8080/api/admin/login', {
+          username: this.username,
+          password: this.password
+        });
+
+        if (response.data.status === 'success') {
+          localStorage.setItem('adminAuthenticated', 'true');
+          this.$router.push('/admin');
+        }
+      } catch (error) {
         this.error = '아이디 또는 비밀번호가 올바르지 않습니다.';
       }
     }

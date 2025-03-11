@@ -6,13 +6,16 @@
       </div>
       <div class="header-buttons">
         <button @click="$router.push('/')" class="nav-button home-button">
-          <i class="fas fa-home"></i> 홈페이지로 이동
+          <i class="fas fa-home"></i>
+          <span>홈페이지로 이동</span>
         </button>
         <button @click="$router.push('/admin/account')" class="nav-button account-button">
-          <i class="fas fa-user-cog"></i> 계정 관리
+          <i class="fas fa-user-cog"></i>
+          <span>계정 관리</span>
         </button>
         <button @click="logout" class="nav-button logout-button">
-          <i class="fas fa-sign-out-alt"></i> 로그아웃
+          <i class="fas fa-sign-out-alt"></i>
+          <span>로그아웃</span>
         </button>
       </div>
     </div>
@@ -29,34 +32,40 @@
         <table class="schedule-table">
           <thead>
             <tr>
-              <th>노선 종류</th>
-              <th>노선 번호</th>
-              <th>출발지</th>
-              <th>도착지</th>
-              <th>출발 시간</th>
-              <th>소요 시간</th>
-              <th>지연 시간</th>
-              <th>도보 시간</th>
-              <th>작업</th>
+              <th class="text-left">노선 종류</th>
+              <th class="text-left">노선 번호</th>
+              <th class="text-left">출발지</th>
+              <th class="text-left">도착지</th>
+              <th class="text-center">출발 시간</th>
+              <th class="text-center">소요 시간</th>
+              <th class="text-center">지연 시간</th>
+              <th class="text-center">도보 시간</th>
+              <th class="text-center action-header">작업</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="schedule in schedules" :key="schedule.id">
-              <td>{{ getRouteTypeDisplay(schedule.routeType) }}</td>
+              <td>
+                <span :class="['route-type-tag', schedule.routeType === 'SHUTTLE' ? 'shuttle' : 'bus']">
+                  {{ getRouteTypeDisplay(schedule.routeType) }}
+                </span>
+              </td>
               <td>{{ schedule.routeNumber }}</td>
               <td>{{ schedule.startLocation }}</td>
               <td>{{ schedule.endLocation }}</td>
-              <td>{{ schedule.departureTime }}</td>
-              <td>{{ schedule.duration }}분</td>
-              <td>{{ schedule.trafficDelay }}분</td>
-              <td>{{ schedule.walkDuration }}분</td>
-              <td class="action-buttons">
-                <button @click="editSchedule(schedule)" class="edit-button" title="수정">
-                  <i class="fas fa-edit"></i>
-                </button>
-                <button @click="deleteSchedule(schedule.id)" class="delete-button" title="삭제">
-                  <i class="fas fa-trash-alt"></i>
-                </button>
+              <td class="text-center">{{ schedule.departureTime }}</td>
+              <td class="text-center">{{ schedule.duration }}분</td>
+              <td class="text-center">{{ schedule.trafficDelay }}분</td>
+              <td class="text-center">{{ schedule.walkDuration }}분</td>
+              <td class="action-column">
+                <div class="action-buttons">
+                  <button @click="editSchedule(schedule)" class="action-button edit-button" title="수정">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button @click="deleteSchedule(schedule.id)" class="action-button delete-button" title="삭제">
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -348,15 +357,27 @@ export default {
 }
 
 .nav-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
+  display: inline-flex;
+  align-items: center;      /* 수직 중앙 정렬 */
+  justify-content: center;  /* 수평 중앙 정렬 */
+  gap: 8px;                /* 아이콘과 텍스트 사이 간격 */
+  padding: 8px 16px;
   border: none;
   border-radius: 6px;
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s;
+  height: 36px;            /* 버튼 높이 고정 */
+  line-height: 1;          /* 줄 높이를 1로 설정 */
+}
+
+.nav-button i {
+  font-size: 1rem;
+}
+
+.nav-button span {
+  display: inline-block;
+  vertical-align: middle;  /* 텍스트 수직 중앙 정렬 */
 }
 
 .home-button {
@@ -372,6 +393,19 @@ export default {
 .logout-button {
   background-color: #dc3545;
   color: white;
+}
+
+/* 호버 효과 */
+.home-button:hover {
+  background-color: #138496;
+}
+
+.account-button:hover {
+  background-color: #5a6268;
+}
+
+.logout-button:hover {
+  background-color: #c82333;
 }
 
 .content-section {
@@ -420,39 +454,54 @@ export default {
 
 .schedule-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   margin-top: 1rem;
 }
 
 .schedule-table th,
 .schedule-table td {
-  padding: 1rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid #dee2e6;
+  vertical-align: middle;
+}
+
+.text-left {
   text-align: left;
-  border-bottom: 1px solid #eee;
 }
 
-.schedule-table th {
-  background-color: #f8f9fa;
-  font-weight: 600;
-  color: #495057;
+.text-center {
+  text-align: center;
 }
 
-.schedule-table tr:hover {
-  background-color: #f8f9fa;
+.action-header {
+  width: 120px;
+}
+
+.action-column {
+  width: 120px;
+  text-align: center;
 }
 
 .action-buttons {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
 }
 
-.edit-button,
-.delete-button {
-  padding: 0.5rem;
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
+  line-height: 1;
+  padding: 0;
 }
 
 .edit-button {
@@ -471,6 +520,14 @@ export default {
 
 .delete-button:hover {
   background-color: #c82333;
+}
+
+/* 아이콘 크기 조정 */
+.action-button i {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 반응형 디자인 */
@@ -655,5 +712,25 @@ input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+.route-type-tag {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  min-width: 64px;
+}
+
+.route-type-tag.bus {
+  background-color: #82c91e;  /* 연두색 */
+  color: white;
+}
+
+.route-type-tag.shuttle {
+  background-color: #e03131;  /* 빨간색 */
+  color: white;
 }
 </style> 

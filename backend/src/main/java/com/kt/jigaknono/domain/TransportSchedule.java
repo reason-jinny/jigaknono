@@ -41,7 +41,7 @@ public class TransportSchedule {
     private Integer walkDuration;  // 도보 소요 시간 (분)
 
     @Column(name = "walk_distance")
-    private Integer walkDistance;  // 도보 거리 (미터)
+    private Integer walkDistance = 0; // 기본값 설정
 
     // 🔄 도착 시간 계산 메서드 제거 (Service로 이동)
 }

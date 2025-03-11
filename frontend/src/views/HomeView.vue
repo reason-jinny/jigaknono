@@ -67,11 +67,12 @@
           <strong class="highlight-route">{{ recommendation.routeNumber }}{{ isKTShuttle(recommendation.routeNumber) ? '' : '번 버스' }}</strong>{{ getJosa(recommendation.routeNumber) }} 탑승하세요!
         </p>
         <p>이거 놓치면 지각~😖🔥🔥🔥</p>
-        <p v-if="isLateArrivalTime" class="late-time-message">근데 왜 이 시간에 출근을...?😱</p>
+        <p v-if="isLateArrivalTime" class="weird-time-message">근데 왜 이 시간에 출근을...?😱</p>
       </div>
     </div>
     <div v-if="error" class="alert-error">
       <p>{{ error }}</p>
+      <p class="weird-time-message">아직 아무도 안 일어났을 시간인데...?😴</p>
     </div>
     <div class="button-container">
       <button @click="openNaverMapToCheonggye" class="nav-button">
@@ -171,11 +172,6 @@ export default {
       if (this.showValidation && this.currentLocation) {
         this.showValidation = false;
       }
-    },
-    targetArrivalTimeStr() {
-      if (this.showValidation && this.targetArrivalTimeStr) {
-        this.showValidation = false;
-      }
     }
   },
   computed: {
@@ -191,6 +187,9 @@ export default {
   },
   methods: {
     async getRecommendation() {
+      // 버튼 클릭 시 기존 결과 초기화
+      this.recommendation = null;
+      this.error = null;
       this.showValidation = true;
       
       // 필수 입력값이 없으면 API 호출하지 않음
@@ -199,6 +198,13 @@ export default {
       }
 
       try {
+        // 시간 문자열을 Date 객체로 변환
+        const [hours, minutes] = this.targetArrivalTimeStr.split(':');
+        const targetTime = new Date();
+        targetTime.setHours(parseInt(hours));
+        targetTime.setMinutes(parseInt(minutes));
+        targetTime.setSeconds(0);
+
         const response = await axios.get('http://localhost:8080/api/recommendation', {
           params: {
             currentLocation: this.currentLocation,
@@ -439,7 +445,7 @@ export default {
   margin-bottom: 0;
 }
 
-.late-time-message {
+.weird-time-message {
   color: #6c757d;
   font-style: italic;
   margin-top: 8px;

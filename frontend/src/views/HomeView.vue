@@ -55,19 +55,38 @@
     <div v-if="recommendation" class="card">
       <h2 class="card-header">추천 경로</h2>
       <div class="card-body">
-        <p><strong>출발 시간:</strong> {{ formatTime(recommendation.departureTime) }}</p>
-        <p><strong>도착 시간:</strong> {{ formatTime(recommendation.arrivalTime) }}</p>
+        <div class="route-info-grid">
+          <div class="route-info-row">
+            <div class="route-info-cell">
+              <strong>탑승지:</strong> {{ recommendation.startLocation }}
+            </div>
+            <div class="route-info-cell">
+              <strong>출발 시간:</strong> {{ formatTime(recommendation.departureTime) }}
+            </div>
+          </div>
+          <div class="route-info-row">
+            <div class="route-info-cell">
+              <strong>도착지:</strong> KT 판교빌딩
+            </div>
+            <div class="route-info-cell">
+              <strong>도착 시간:</strong> {{ formatTime(recommendation.arrivalTime) }}
+            </div>
+          </div>
+        </div>
+
         <p v-if="recommendation.weatherDelay > 0" class="weather-warning">
           <i class="fas" :class="recommendation.weatherIcon"></i>
           {{ recommendation.weatherMessage }} 인해 평소보다 {{ recommendation.weatherDelay }}분 더 여유 있는 출발 추천!
         </p>
+
         <p class="main-instruction">
           <strong class="highlight-time">{{ formatTimeWithKorean(recommendation.departureTime) }}</strong>까지
-          <strong>{{ recommendation.startLocation }}</strong>에 도착하셔서,
+          <strong>{{ recommendation.startLocation }}</strong>에 도착하셔서,<br>
           <strong class="highlight-route">{{ recommendation.routeNumber }}{{ isKTShuttle(recommendation.routeNumber) ? '' : '번 버스' }}</strong>{{ getJosa(recommendation.routeNumber) }} 탑승하세요!
         </p>
-        <p>이거 놓치면 지각~😖🔥🔥🔥</p>
-        <p v-if="recommendation && isLateArrivalTime" class="weird-time-message">근데 왜 이 시간에 출근을...?😱</p>
+        
+        <p class="warning-message">이거 놓치면 지각~😖🔥🔥🔥</p>
+        <p v-if="isLateArrivalTime" class="weird-time-message">근데 왜 이 시간에 출근을...?😱</p>
       </div>
     </div>
     <div v-if="error" class="alert-error">
@@ -382,6 +401,7 @@ export default {
   padding: 10px;
   border-radius: 4px;
   margin-bottom: 20px;
+  text-align: center;
 }
 
 .weather-warning {
@@ -408,6 +428,7 @@ export default {
   color: #6c757d;
   font-style: italic;
   margin-top: 8px;
+  text-align: center;
 }
 
 /* 필수/선택 표시 */
@@ -567,5 +588,36 @@ export default {
   margin-bottom: 12px;
   font-weight: 500;
   color: #1f2937;
+}
+
+.route-info-grid {
+  display: grid;
+  /* gap: 15px; */
+  margin-bottom: 20px;
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.route-info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.route-info-cell {
+  padding: 8px;
+}
+
+.route-info-cell strong {
+  color: #2c3e50;
+  margin-right: 8px;
+}
+
+.warning-message {
+  color: #dc3545;
+  font-weight: bold;
+  margin-top: 15px;
+  text-align: center;
 }
 </style>

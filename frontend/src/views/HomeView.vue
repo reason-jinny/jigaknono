@@ -19,6 +19,7 @@
           판교역
         </label>
       </div>
+      <p v-if="showValidation && !currentLocation" class="validation-message">출발지를 선택해주세요</p>
     </div>
     <div class="form-group">
       <label class="label">
@@ -28,6 +29,7 @@
         </p>
       </label>
       <input type="time" v-model="targetArrivalTimeStr" class="input" />
+      <p v-if="showValidation && !targetArrivalTimeStr" class="validation-message">목표 도착 시간을 선택해주세요</p>
     </div>
     <div class="form-group">
       <label class="label">
@@ -65,6 +67,7 @@
           <strong class="highlight-route">{{ recommendation.routeNumber }}{{ isKTShuttle(recommendation.routeNumber) ? '' : '번 버스' }}</strong>{{ getJosa(recommendation.routeNumber) }} 탑승하세요!
         </p>
         <p>이거 놓치면 지각~😖🔥🔥🔥</p>
+        <p v-if="isLateArrivalTime" class="late-time-message">근데 왜 이 시간에 출근을...?😱</p>
       </div>
     </div>
     <div v-if="error" class="alert-error">
@@ -92,7 +95,8 @@ export default {
       recommendation: null,
       error: null,
       isRaining: false,
-      isSnowing: false
+      isSnowing: false,
+      showValidation: false
     };
   },
   watch: {
@@ -107,16 +111,39 @@ export default {
       if (newValue) {
         this.isRaining = false;
       }
+    },
+    // 입력값이 변경되면 검증 메시지 숨김
+    currentLocation() {
+      if (this.showValidation && this.currentLocation) {
+        this.showValidation = false;
+      }
+    },
+    targetArrivalTimeStr() {
+      if (this.showValidation && this.targetArrivalTimeStr) {
+        this.showValidation = false;
+      }
     }
   },
   computed: {
     weatherDelay() {
       if (this.isRaining || this.isSnowing) return 10;
       return 0;
+    },
+    isLateArrivalTime() {
+      if (!this.targetArrivalTimeStr) return false;
+      const [hours] = this.targetArrivalTimeStr.split(':');
+      return parseInt(hours) >= 18;
     }
   },
   methods: {
     async getRecommendation() {
+      this.showValidation = true;
+      
+      // 필수 입력값이 없으면 API 호출하지 않음
+      if (!this.currentLocation || !this.targetArrivalTimeStr) {
+        return;
+      }
+
       try {
         const response = await axios.get('http://localhost:8080/api/recommendation', {
           params: {
@@ -126,7 +153,6 @@ export default {
           },
         });
         
-        // 날씨 관련 정보를 recommendation 객체에 포함
         this.recommendation = {
           ...response.data,
           weatherDelay: this.weatherDelay,
@@ -134,8 +160,9 @@ export default {
           weatherIcon: this.isRaining ? 'fa-cloud-rain' : this.isSnowing ? 'fa-snowflake' : ''
         };
         this.error = null;
+        this.showValidation = false;  // 성공하면 검증 메시지 숨김
       } catch (err) {
-        this.error = err.response?.data?.message || '추천 경로를 찾을 수 없습니다.';
+        this.error = '너무 이른 시간에는 교통편이 없어요😭';
         this.recommendation = null;
       }
     },
@@ -320,5 +347,18 @@ export default {
 .highlight-route {
   color: #0d6efd;
   font-size: 1.1em;
+}
+
+.validation-message {
+  color: #dc3545;
+  font-size: 0.9em;
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.late-time-message {
+  color: #6c757d;
+  font-style: italic;
+  margin-top: 8px;
 }
 </style>

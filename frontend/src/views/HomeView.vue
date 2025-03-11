@@ -81,6 +81,57 @@
         우리집에서 판교역까지는 얼마나 걸리지?
       </button>
     </div>
+    <div class="feedback-section">
+      <button @click="openFeedbackModal" class="feedback-button">
+        <i class="fas fa-comment-dots"></i> 교통편 정보 업데이트가 필요하신가요?
+      </button>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div v-if="showFeedbackModal" class="modal-overlay" @click="closeFeedbackModal">
+      <div class="modal-content" @click.stop>
+        <h2 class="modal-title">교통편 정보 업데이트 요청</h2>
+        <div class="modal-body">
+          <div class="feedback-type">
+            <p class="required-text">피드백 유형을 선택해주세요 <span class="required">*</span></p>
+            <label>
+              <input type="radio" v-model="feedbackType" value="add" required />
+              신규 교통편 추가 요청
+            </label>
+            <label>
+              <input type="radio" v-model="feedbackType" value="update" required />
+              기존 교통편 정보 수정 요청
+            </label>
+            <label>
+              <input type="radio" v-model="feedbackType" value="other" required />
+              기타 문의 사항
+            </label>
+          </div>
+          <div class="example-feedbacks" v-if="feedbackType">
+            <p class="example-text">예시)</p>
+            <ul>
+              <li v-if="feedbackType === 'add'">판교역에서 출발하는 55번 버스 추가해주세요.</li>
+              <li v-if="feedbackType === 'update'">청계산입구역에서 출발하는 셔틀 시간 변경됐어요.</li>
+              <li v-if="feedbackType === 'other'">셔틀버스 탑승 위치를 알고 싶어요.</li>
+            </ul>
+          </div>
+          <textarea
+            v-model="feedbackContent"
+            placeholder="상세한 내용을 입력해주세요."
+            class="feedback-textarea"
+            required
+          ></textarea>
+        </div>
+        <div class="modal-footer">
+          <button @click="submitFeedback" class="submit-button" :disabled="!feedbackContent.trim()">
+            전송하기
+          </button>
+          <button @click="closeFeedbackModal" class="cancel-button">
+            취소
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -96,7 +147,10 @@ export default {
       error: null,
       isRaining: false,
       isSnowing: false,
-      showValidation: false
+      showValidation: false,
+      showFeedbackModal: false,
+      feedbackType: '',
+      feedbackContent: ''
     };
   },
   watch: {
@@ -196,6 +250,35 @@ export default {
     },
     isKTShuttle(routeNumber) {
       return routeNumber.toLowerCase().includes('kt') || routeNumber.toLowerCase().includes('셔틀');
+    },
+    openFeedbackModal() {
+      this.showFeedbackModal = true;
+      this.feedbackType = '';
+      this.feedbackContent = '';
+    },
+    closeFeedbackModal() {
+      this.showFeedbackModal = false;
+    },
+    async submitFeedback() {
+      try {
+        if (!this.feedbackType || !this.feedbackContent.trim()) {
+          alert('피드백 유형과 내용을 모두 입력해주세요.');
+          return;
+        }
+
+        const response = await axios.post('http://localhost:8080/api/feedback', {
+          type: this.feedbackType,
+          content: this.feedbackContent.trim()
+        });
+        
+        if (response.data) {
+          alert('소중한 의견 감사합니다! 검토 후 반영하도록 하겠습니다.');
+          this.closeFeedbackModal();
+        }
+      } catch (err) {
+        console.error('피드백 제출 오류:', err);
+        alert('죄송합니다. 전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      }
     }
   },
 };
@@ -360,5 +443,127 @@ export default {
   color: #6c757d;
   font-style: italic;
   margin-top: 8px;
+}
+
+.feedback-section {
+  text-align: center;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.feedback-button {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 0.9em;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 8px 16px;
+}
+
+.feedback-button:hover {
+  color: #374151;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-title {
+  font-size: 1.5em;
+  margin-bottom: 20px;
+  color: #1f2937;
+}
+
+.feedback-type {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.example-feedbacks {
+  background-color: #f3f4f6;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.example-text {
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.feedback-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  resize: vertical;
+  margin-bottom: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.submit-button {
+  background-color: #2563eb;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.submit-button:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+.cancel-button {
+  background-color: #e5e7eb;
+  color: #4b5563;
+  padding: 8px 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.submit-button:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.cancel-button:hover {
+  background-color: #d1d5db;
+}
+
+.required-text {
+  margin-bottom: 12px;
+  font-weight: 500;
+  color: #1f2937;
 }
 </style>

@@ -1,29 +1,24 @@
-server:
-  port: 8080
-  servlet:
-    encoding:
-      force-response: true # 인코딩 강제 설정 (한글 깨짐 방지)
-
 spring:
   application:
-    name: jigaknono # 애플리케이션 이름
-
+    name: jigaknono
   datasource:
     url: jdbc:postgresql://localhost:5432/jigaknono
     username: postgres
     password: 1234
     driver-class-name: org.postgresql.Driver
-
   jpa:
     hibernate:
-      ddl-auto: update # 테이블 자동 생성
+      ddl-auto: update
+      jdbc:
+        time_zone: Asia/Seoul
     properties:
       hibernate:
-        format_sql: true  # SQL 쿼리 포맷팅
-        show_sql: true       # SQL 쿼리 표시
+        format_sql: true
+        show_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
-      open-in-view: false
-
+    open-in-view: false
+  jackson:
+    time-zone: Asia/Seoul
   mvc:
     cors:
       mapping: "/**"
@@ -31,11 +26,3 @@ spring:
       allowed-methods: "*"
       allowed-headers: "*"
       allow-credentials: true
-
-  # web:
-  #   cors: # Vue에서 API 호출 시 CORS 에러 발생 방지
-  #     # allowed-origins: "http://localhost:5173, http://127.0.0.1:5173"
-  #     allowed-origins: "*" # 👉 모든 출처 허용
-  #     allowed-methods: "*" # 👉 모든 HTTP 메서드 허용
-  #     allowed-headers: "*" # 👉 모든 헤더 허용
-  #     allow-credentials: true # 👉 쿠키 전송 허용

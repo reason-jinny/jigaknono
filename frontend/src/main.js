@@ -5,3 +5,6 @@ import App from './App.vue'
 import router from './router'
 
 createApp(App).use(router).mount('#app')
+
+dayjs.extend(utc);
+dayjs.extend(timezone);

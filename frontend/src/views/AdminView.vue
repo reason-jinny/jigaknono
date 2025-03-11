@@ -20,7 +20,27 @@
       </div>
     </div>
 
-    <div class="content-section">
+    <!-- 탭 메뉴 추가 -->
+    <div class="tab-menu">
+      <button 
+        @click="currentTab = 'routes'"
+        :class="['tab-button', { active: currentTab === 'routes' }]"
+      >
+        <i class="fas fa-route"></i> 노선 관리
+      </button>
+      <button 
+        @click="currentTab = 'feedback'"
+        :class="['tab-button', { active: currentTab === 'feedback' }]"
+      >
+        <i class="fas fa-comments"></i> 피드백 관리
+        <span v-if="unreadFeedbackCount" class="notification-badge">
+          {{ unreadFeedbackCount }}
+        </span>
+      </button>
+    </div>
+
+    <!-- 노선 관리 탭 -->
+    <div v-if="currentTab === 'routes'" class="content-section">
       <div class="section-header">
         <h2 class="section-title">노선 목록</h2>
         <div class="header-actions">
@@ -89,6 +109,54 @@
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- 피드백 관리 탭 -->
+    <div v-if="currentTab === 'feedback'" class="content-section">
+      <div class="section-header">
+        <h2 class="section-title">피드백 목록</h2>
+        <div class="header-actions">
+          <div class="filter-options">
+            <label class="filter-label">
+              <input type="checkbox" v-model="showResolved" @change="loadFeedbacks">
+              처리완료 피드백 표시
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="feedback-list">
+        <div v-for="feedback in filteredFeedbacks" :key="feedback.id" 
+             class="feedback-card" :class="{ 'resolved': feedback.isResolved }">
+          <div class="feedback-header">
+            <span class="feedback-type" :class="feedback.type.toLowerCase()">
+              {{ getFeedbackTypeDisplay(feedback.type) }}
+            </span>
+            <span class="feedback-date">{{ formatDate(feedback.createdAt) }}</span>
+          </div>
+          
+          <div class="feedback-content">{{ feedback.content }}</div>
+          
+          <div v-if="feedback.isResolved" class="admin-comment">
+            <strong>처리결과:</strong> {{ feedback.adminComment }}
+          </div>
+          
+          <div v-if="!feedback.isResolved" class="feedback-actions">
+            <textarea 
+              v-model="feedback.tempComment" 
+              placeholder="처리 결과를 입력하세요"
+              class="admin-input"
+            ></textarea>
+            <button @click="resolveFeedback(feedback)" class="resolve-button" :disabled="!feedback.tempComment">
+              처리완료
+            </button>
+          </div>
+        </div>
+        
+        <div v-if="filteredFeedbacks.length === 0" class="no-feedback">
+          표시할 피드백이 없습니다.
+        </div>
       </div>
     </div>
 
@@ -191,6 +259,10 @@ export default {
       showModal: false,
       showSearch: false,
       routeFilter: '',
+      currentTab: 'routes',
+      feedbacks: [],
+      showResolved: false,
+      unreadFeedbackCount: 0
     };
   },
   
@@ -351,6 +423,58 @@ export default {
       this.routeFilter = '';
       this.$refs.searchInput.focus();
     },
+
+    async loadFeedbacks() {
+      try {
+        const response = await axios.get('http://localhost:8080/api/feedback');
+        this.feedbacks = response.data.map(feedback => ({
+          ...feedback,
+          tempComment: '',
+          createdAt: new Date(feedback.createdAt).toISOString() // ISO 형식으로 변환
+        }));
+        this.updateUnreadCount();
+      } catch (error) {
+        console.error('피드백 목록을 불러오는데 실패했습니다:', error);
+      }
+    },
+
+    async resolveFeedback(feedback) {
+      try {
+        await axios.put(`http://localhost:8080/api/feedback/${feedback.id}/resolve`, {
+          adminComment: feedback.tempComment
+        });
+        await this.loadFeedbacks();
+      } catch (error) {
+        console.error('피드백 처리에 실패했습니다:', error);
+      }
+    },
+
+    getFeedbackTypeDisplay(type) {
+      const types = {
+        'add': '신규 추가 요청',
+        'update': '정보 수정 요청',
+        'other': '기타 문의 사항'
+      };
+      return types[type] || type;
+    },
+
+    formatDate(dateStr) {
+      if (!dateStr) return '';
+      const options = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'Asia/Seoul'
+      };
+      return new Date(dateStr).toLocaleString('ko-KR', options);
+    },
+
+    updateUnreadCount() {
+      this.unreadFeedbackCount = this.feedbacks.filter(f => !f.isResolved).length;
+    }
   },
 
   computed: {
@@ -391,6 +515,12 @@ export default {
         }
         return a.departureTime.localeCompare(b.departureTime);
       });
+    },
+
+    filteredFeedbacks() {
+      return this.feedbacks
+        .filter(f => this.showResolved || !f.isResolved)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
   },
 
@@ -403,6 +533,15 @@ export default {
 
   mounted() {
     this.loadSchedules();
+    this.loadFeedbacks();
+  },
+
+  watch: {
+    currentTab(newTab) {
+      if (newTab === 'feedback') {
+        this.loadFeedbacks();
+      }
+    }
   }
 };
 </script>
@@ -852,12 +991,14 @@ input[readonly] {
 
 /* 숫자 입력 필드의 화살표 스타일링 */
 input[type="number"] {
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 
 input[type="number"]::-webkit-outer-spin-button,
 input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
+  appearance: none;
   margin: 0;
 }
 
@@ -901,5 +1042,161 @@ input[type="number"]::-webkit-inner-spin-button {
   padding: 0.75rem;
   border-bottom: 1px solid #dee2e6;
   vertical-align: middle;
+}
+
+.tab-menu {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.tab-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #f8f9fa;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #6c757d;
+  position: relative;
+}
+
+.tab-button.active {
+  background-color: #e9ecef;
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #dc3545;
+  color: white;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.feedback-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.feedback-card {
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.feedback-card.resolved {
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+}
+
+.feedback-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.feedback-type {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.feedback-type.add {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.feedback-type.update {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.feedback-type.other {
+  background-color: #e9d5ff;
+  color: #6b21a8;
+}
+
+.feedback-date {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.feedback-content {
+  color: #1f2937;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.admin-comment {
+  background-color: #f3f4f6;
+  padding: 0.75rem;
+  border-radius: 4px;
+  color: #4b5563;
+}
+
+.feedback-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.admin-input {
+  width: 100%;
+  min-height: 80px;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  resize: vertical;
+}
+
+.resolve-button {
+  align-self: flex-end;
+  background-color: #2563eb;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.resolve-button:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+.no-feedback {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+  background-color: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+}
+
+.filter-options {
+  display: flex;
+  align-items: center;
+}
+
+.filter-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4b5563;
+  cursor: pointer;
 }
 </style> 

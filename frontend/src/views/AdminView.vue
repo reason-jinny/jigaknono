@@ -1,6 +1,9 @@
 <template>
   <div class="container">
-    <h1 class="title">지각노노 관리자 페이지</h1>
+    <div class="header">
+      <h1 class="title">지각노노 관리자 페이지</h1>
+      <button @click="logout" class="logout-button">로그아웃</button>
+    </div>
     
     <!-- 스케줄 목록 -->
     <div class="schedule-list">
@@ -198,6 +201,18 @@ export default {
     resetForm() {
       this.currentSchedule = this.getEmptySchedule();
       this.isEditing = false;
+    },
+
+    logout() {
+      localStorage.removeItem('adminAuthenticated');
+      this.$router.push('/admin/login');
+    }
+  },
+
+  created() {
+    // 페이지 진입 시 인증 체크
+    if (!localStorage.getItem('adminAuthenticated')) {
+      this.$router.push('/admin/login');
     }
   },
 
@@ -253,5 +268,25 @@ input, select {
 button {
   padding: 8px 15px;
   margin-right: 10px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.logout-button {
+  padding: 0.5rem 1rem;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.logout-button:hover {
+  background-color: #c82333;
 }
 </style> 

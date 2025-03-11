@@ -26,34 +26,49 @@ public class RecommendationService {
                 .plusMinutes(Optional.ofNullable(schedule.getWalkDuration()).orElse(0));
     }
 
-    // 🔄 경로 추천 및 출발 시간 계산
-    public Map<String, Object> recommendRoute(String currentLocation, String targetArriavalTimeStr) {
+    // // 🔄 경로 추천 및 출발 시간 계산
+    // public Map<String, Object> recommendRoute(String currentLocation, String targetArriavalTimeStr, int weatherDelay) {
+    //     LocalTime targetArrivalTime = LocalTime.parse(targetArriavalTimeStr);
+    //     String mappedLocation = mapLocation(currentLocation);
 
-        // 🔄 목표 도착 시간 파라미터를 LocalTime으로 변환
+    //     Optional<TransportSchedule> optionalSchedule = transportScheduleRepository
+    //         .findTopByStartLocationContainingAndCalculatedArrivalTimeBeforeOrderByDepartureTimeDesc(
+    //             mappedLocation, targetArrivalTime);
+
+    //     return optionalSchedule.map(schedule -> {
+    //         Map<String, Object> result = new HashMap<>();
+    //         result.put("departureTime", schedule.getDepartureTime());
+    //         result.put("arrivalTime", calculateArrivalTime(schedule).plusMinutes(weatherDelay));
+    //         result.put("startLocation", schedule.getStartLocation());
+    //         result.put("routeNumber", schedule.getRouteNumber());
+    //         result.put("recommendedRoute", schedule.getRouteType() + " " + schedule.getRouteNumber());
+    //         result.put("status", "success");
+    //         return result;
+    //     }).orElseGet(() -> createErrorResult("적절한 경로를 찾을 수 없습니다."));
+    // }
+    // 🔄 경로 추천 및 출발 시간 계산
+    public Map<String, Object> recommendRoute(String currentLocation, String targetArriavalTimeStr, int weatherDelay) {
         LocalTime targetArrivalTime = LocalTime.parse(targetArriavalTimeStr);
 
-        // 출발지 이름 매핑
+        // 날씨 지연을 고려하여 실제 목표 도착 시간을 더 일찍으로 조정
+        LocalTime adjustedTargetTime = targetArrivalTime.minusMinutes(weatherDelay);
+
         String mappedLocation = mapLocation(currentLocation);
 
-        // 가능한 모든 도착지에 대해 스케줄 검색
-        // 스케줄 검색 시 endLocation 파라미터 제거
         Optional<TransportSchedule> optionalSchedule = transportScheduleRepository
-            .findTopByStartLocationContainingAndCalculatedArrivalTimeBeforeOrderByDepartureTimeDesc(
-                mappedLocation, targetArrivalTime);
+                .findTopByStartLocationContainingAndCalculatedArrivalTimeBeforeOrderByDepartureTimeDesc(
+                        mappedLocation, adjustedTargetTime);
 
         return optionalSchedule.map(schedule -> {
-            // 데이터가 있을 때: schedule을 받아서 Map<String, Object> 형태로 가공
             Map<String, Object> result = new HashMap<>();
             result.put("departureTime", schedule.getDepartureTime());
-            result.put("arrivalTime", calculateArrivalTime(schedule)); // 🔄 Service에서 계산한 도착 시간
+            result.put("arrivalTime", calculateArrivalTime(schedule)); // 날씨 지연을 제외한 실제 도착 시간
             result.put("startLocation", schedule.getStartLocation());
             result.put("routeNumber", schedule.getRouteNumber());
             result.put("recommendedRoute", schedule.getRouteType() + " " + schedule.getRouteNumber());
             result.put("status", "success");
             return result;
-        // 데이터가 없을 때: map이 호출되지 않고 orElseGet이 실행 - 에러 메시지 반환
-        // orElseGet: 데이터가 없을 때 실행되는 람다식 - Optional이 비어있을 때 실행될 코드를 작성
-        }).orElseGet(() -> createErrorResult("적절한 경로를 찾을 수 없습니다."));                
+        }).orElseGet(() -> createErrorResult("적절한 경로를 찾을 수 없습니다."));
     }
 
     private String mapLocation(String location) {

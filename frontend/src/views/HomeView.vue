@@ -66,7 +66,18 @@
           </div>
           <div class="route-info-row">
             <div class="route-info-cell">
-              <strong>도착지:</strong> KT 판교빌딩
+              <strong>하차지:</strong> {{ recommendation.endLocation }}
+              <span class="walk-info">
+                <i class="fas fa-walking"></i> {{ recommendation.walkDuration }}분 도보
+              </span>
+            </div>
+            <div class="route-info-cell">
+              <strong>하차 시간:</strong> {{ formatTime(recommendation.busArrivalTime) }}
+            </div>
+          </div>
+          <div class="route-info-row final-arrival">
+            <div class="route-info-cell">
+              <strong>최종 도착:</strong> KT판교빌딩
             </div>
             <div class="route-info-cell">
               <strong>도착 시간:</strong> {{ formatTime(recommendation.arrivalTime) }}
@@ -82,7 +93,7 @@
         <p class="main-instruction">
           <strong class="highlight-time">{{ formatTimeWithKorean(recommendation.departureTime) }}</strong>까지
           <strong>{{ recommendation.startLocation }}</strong>에 도착하셔서,<br>
-          <strong class="highlight-route">{{ recommendation.routeNumber }}{{ isKTShuttle(recommendation.routeNumber) ? '' : '번 버스' }}</strong>{{ getJosa(recommendation.routeNumber) }} 탑승하세요!
+          <strong class="highlight-route">{{ recommendation.routeNumber }}{{ isKTShuttle(recommendation.routeNumber) ? '' : getBusText(recommendation.routeNumber) }}</strong>{{ getJosa(recommendation.routeNumber) }} 탑승하세요!
         </p>
         
         <p class="warning-message">이거 놓치면 지각~😖🔥🔥🔥</p>
@@ -272,7 +283,13 @@ export default {
     formatTimeWithKorean(timeStr) {
       if (!timeStr) return '';
       const [hours, minutes] = timeStr.split(':');
-      return `${parseInt(hours)}시 ${parseInt(minutes)}분`;
+      const hour = parseInt(hours);
+      return `오${hour < 12 ? '전' : '후'} ${hour > 12 ? hour - 12 : hour}시 ${parseInt(minutes)}분`;
+    },
+    getBusText(routeNumber) {
+      // 숫자로만 이루어진 노선인지 확인
+      const isNumberOnly = /^\d+$/.test(routeNumber);
+      return isNumberOnly ? '번 버스' : ' 버스';
     },
     isKTShuttle(routeNumber) {
       return routeNumber.toLowerCase().includes('kt') || routeNumber.toLowerCase().includes('셔틀');
@@ -619,5 +636,17 @@ export default {
   font-weight: bold;
   margin-top: 15px;
   text-align: center;
+}
+
+.walk-info {
+  font-size: 0.9em;
+  color: #666;
+  margin-left: 8px;
+}
+
+.final-arrival {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #ddd;
 }
 </style>

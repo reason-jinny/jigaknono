@@ -62,9 +62,18 @@ public class RecommendationService {
         return optionalSchedule.map(schedule -> {
             Map<String, Object> result = new HashMap<>();
             result.put("departureTime", schedule.getDepartureTime());
-            result.put("arrivalTime", calculateArrivalTime(schedule)); // 날씨 지연을 제외한 실제 도착 시간
+            
+            // 버스 하차 시간 계산 (도보 시간 제외)
+            LocalTime busArrivalTime = schedule.getDepartureTime()
+                .plusMinutes(Optional.ofNullable(schedule.getDuration()).orElse(0))
+                .plusMinutes(Optional.ofNullable(schedule.getTrafficDelay()).orElse(0));
+            
+            result.put("busArrivalTime", busArrivalTime);
+            result.put("arrivalTime", calculateArrivalTime(schedule));
             result.put("startLocation", schedule.getStartLocation());
+            result.put("endLocation", schedule.getEndLocation());
             result.put("routeNumber", schedule.getRouteNumber());
+            result.put("walkDuration", schedule.getWalkDuration());
             result.put("recommendedRoute", schedule.getRouteType() + " " + schedule.getRouteNumber());
             result.put("status", "success");
             return result;

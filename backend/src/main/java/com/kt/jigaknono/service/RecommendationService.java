@@ -1,9 +1,7 @@
 package com.kt.jigaknono.service;
 
 import com.kt.jigaknono.domain.TransportSchedule;
-// import com.kt.jigaknono.domain.UserSettings;
 import com.kt.jigaknono.repository.TransportScheduleRepository;
-// import com.kt.jigaknono.repository.UserSettingsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

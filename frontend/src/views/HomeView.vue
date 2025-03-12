@@ -53,7 +53,6 @@
       <label class="label">
         <p>
           <strong>교통수단 선택</strong>
-          <span class="optional">(선택사항)</span>
         </p>
       </label>
       <div class="transport-options">
@@ -67,8 +66,8 @@
           <span class="transport-content">
             <i class="fas fa-bus"></i>
             <i class="fas fa-plus" style="font-size: 0.7em; margin: 0 4px;"></i>
-            <i class="fas fa-bus-alt"></i>
-            <span class="transport-text">셔틀 + 일반버스</span>
+            <i class="fas fa-shuttle-van"></i>
+            <span class="transport-text">모든 교통편</span>
           </span>
         </label>
         <label class="transport-option">
@@ -311,7 +310,7 @@ export default {
     },
     openNaverMapToCheonggye() {
       // 🟢 청계산입구역 링크
-      const url = "https://map.naver.com/p/directions/-/14143624.0533892,4501872.9388012,%EC%B2%AD%EA%B3%84%EC%82%B0%EC%9E%85%EA%B5%AD%EC%97%AD1%EB%B2%88%EC%B6%9C%EA%B5%AC,21406671,PLACE_POI/-/transit?c=15.00,0,0,0,dh";
+      const url = "https://map.naver.com/p/directions/-/14143624.0533892,4501872.9388012,%EC%B2%AD%EA%B3%84%EC%82%B0%EC%9E%85%EA%B5%AC%EC%97%AD1%EB%B2%88%EC%B6%9C%EA%B5%AC,21406671,PLACE_POI/-/transit?c=15.00,0,0,0,dh";
       window.open(url, "_blank");
     },
     openNaverMapToPangyo() {
@@ -354,7 +353,7 @@ export default {
         });
         
         if (response.data) {
-          alert('소중한 의견 감사합니다! 검토 후 반영하도록 하겠습니다.');
+          alert('소중한 의견 감사합니다! 검토 후 반영하도록 하겠습니다☺️');
           this.closeFeedbackModal();
         }
       } catch (err) {

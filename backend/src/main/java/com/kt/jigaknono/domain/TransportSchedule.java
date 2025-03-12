@@ -43,5 +43,8 @@ public class TransportSchedule {
     @Column(name = "walk_distance")
     private Integer walkDistance = 0; // 기본값 설정
 
+    @Column(name = "route_path")
+    private String routePath;  // "PANGYO_TO_KT" 또는 "CHEONGGYE_TO_KT"
+
     // 🔄 도착 시간 계산 메서드 제거 (Service로 이동)
 }

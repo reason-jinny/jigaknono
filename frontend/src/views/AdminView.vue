@@ -42,9 +42,26 @@
     <!-- 노선 관리 탭 -->
     <div v-if="currentTab === 'routes'" class="content-section">
       <div class="section-header">
-        <h2 class="section-title">노선 목록</h2>
+        <div class="title-with-info">
+          <h2 class="section-title">노선 목록</h2>
+          <div class="info-tooltip">
+            <i class="fas fa-info-circle"></i>
+            <span class="tooltip-text">
+              정렬 기준:<br>
+              1. 셔틀버스가 상단에 표시됩니다.<br>
+              2. 같은 출발지끼리 그룹화됩니다.<br>
+              3. 출발 시간이 빠른 순서대로 정렬됩니다.<br>
+              4. 도착 시간이 빠른 순서대로 정렬됩니다.
+            </span>
+          </div>
+        </div>
         <div class="header-actions">
           <div class="search-container">
+            <select v-model="routePathFilter" class="route-path-filter">
+              <option value="">모든 경로</option>
+              <option value="PANGYO_TO_KT">판교역 → KT판교빌딩</option>
+              <option value="CHEONGGYE_TO_KT">청계산입구역 → KT판교빌딩</option>
+            </select>
             <div v-if="showSearch" class="search-box">
               <input 
                 type="text" 
@@ -190,11 +207,36 @@
               </div>
 
               <div class="form-group">
+                <label>노선 경로 <span class="required">*</span></label>
+                <div class="radio-group">
+                  <label class="radio-label">
+                    <input 
+                      type="radio" 
+                      v-model="currentSchedule.routePath" 
+                      value="PANGYO_TO_KT"
+                      @change="handleRoutePathChange"
+                    >
+                    판교역 → KT판교빌딩
+                  </label>
+                  <label class="radio-label">
+                    <input 
+                      type="radio" 
+                      v-model="currentSchedule.routePath" 
+                      value="CHEONGGYE_TO_KT"
+                      @change="handleRoutePathChange"
+                    >
+                    청계산입구역 → KT판교빌딩
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-group">
                 <label>출발지 <span class="required">*</span></label>
-                <select v-model="currentSchedule.startLocation" required class="select-box">
-                  <option value="청계산입구역">청계산입구역</option>
-                  <option value="판교역">판교역</option>
-                </select>
+                <input 
+                  v-model="currentSchedule.startLocation" 
+                  required
+                  :placeholder="getStartLocationPlaceholder()"
+                >
               </div>
 
               <div class="form-group">
@@ -261,6 +303,7 @@ export default {
       showModal: false,
       showSearch: false,
       routeFilter: '',
+      routePathFilter: '',
       currentTab: 'routes',
       feedbacks: [],
       showResolved: false,
@@ -273,7 +316,8 @@ export default {
       return {
         routeType: 'BUS',
         routeNumber: '',
-        startLocation: '청계산입구역',
+        routePath: 'PANGYO_TO_KT',  // 기본값 설정
+        startLocation: '',
         endLocation: 'KT판교빌딩',
         departureTime: '',
         duration: '',
@@ -387,8 +431,13 @@ export default {
     handleRouteTypeChange() {
       if (this.currentSchedule.routeType === 'SHUTTLE') {
         this.currentSchedule.routeNumber = 'KT셔틀';
+        // 셔틀인 경우 출발지를 자동으로 설정
+        this.currentSchedule.startLocation = this.currentSchedule.routePath === 'PANGYO_TO_KT' 
+          ? '판교역' 
+          : '청계산입구역';
       } else {
         this.currentSchedule.routeNumber = '';
+        this.currentSchedule.startLocation = ''; // 버스인 경우 출발지 초기화
       }
     },
 
@@ -493,6 +542,26 @@ export default {
       
       // HH:mm 형식으로 반환
       return `${String(departureDate.getHours()).padStart(2, '0')}:${String(departureDate.getMinutes()).padStart(2, '0')}`;
+    },
+
+    handleRoutePathChange() {
+      // 셔틀버스인 경우 출발지를 자동으로 설정
+      if (this.currentSchedule.routeType === 'SHUTTLE') {
+        this.currentSchedule.startLocation = this.currentSchedule.routePath === 'PANGYO_TO_KT' 
+          ? '판교역' 
+          : '청계산입구역';
+      }
+    },
+
+    getStartLocationPlaceholder() {
+      if (this.currentSchedule.routeType === 'SHUTTLE') {
+        return this.currentSchedule.routePath === 'PANGYO_TO_KT' 
+          ? '판교역' 
+          : '청계산입구역';
+      }
+      return this.currentSchedule.routePath === 'PANGYO_TO_KT' 
+        ? '예: 판교역동편, 판교역' 
+        : '예: 청계산입구역';
     }
   },
 
@@ -524,6 +593,13 @@ export default {
         );
       }
 
+      // 경로 필터 적용
+      if (this.routePathFilter) {
+        filtered = filtered.filter(schedule => 
+          schedule.routePath === this.routePathFilter
+        );
+      }
+
       // 정렬 로직 적용
       return filtered.sort((a, b) => {
         // 1. 셔틀을 상단에 배치
@@ -536,7 +612,12 @@ export default {
           return a.startLocation.localeCompare(b.startLocation);
         }
         
-        // 3. 도착 시간 기준 정렬
+        // 3. 출발 시간 기준 정렬
+        if (a.departureTime !== b.departureTime) {
+          return a.departureTime.localeCompare(b.departureTime);
+        }
+
+        // 4. 도착 시간 기준 정렬
         const arrivalTimeA = this.calculateArrivalTime(a);
         const arrivalTimeB = this.calculateArrivalTime(b);
         return arrivalTimeA.localeCompare(arrivalTimeB);
@@ -685,6 +766,27 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.route-path-filter {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  background-color: white;
+  color: #333;
+  cursor: pointer;
+  min-width: 220px;
+}
+
+.route-path-filter:hover {
+  border-color: #aaa;
+}
+
+.route-path-filter:focus {
+  outline: none;
+  border-color: #17a2b8;
+  box-shadow: 0 0 0 2px rgba(23, 162, 184, 0.1);
 }
 
 .search-box {
@@ -1224,5 +1326,75 @@ input[type="number"]::-webkit-inner-spin-button {
   gap: 0.5rem;
   color: #4b5563;
   cursor: pointer;
+}
+
+.radio-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.radio-label input[type="radio"] {
+  margin: 0;
+}
+
+.title-with-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.info-tooltip {
+  position: relative;
+  display: inline-block;
+  color: #6c757d;
+  cursor: help;
+}
+
+.info-tooltip i {
+  font-size: 1rem;
+}
+
+.info-tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 100%;
+  margin-bottom: 5px;
+  padding: 0.75rem;
+  background-color: #2c3e50;
+  color: white;
+  text-align: left;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  white-space: nowrap;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #2c3e50 transparent transparent transparent;
 }
 </style> 

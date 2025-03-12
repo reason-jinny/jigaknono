@@ -76,6 +76,7 @@
               <th class="text-left">출발지</th>
               <th class="text-left">도착지</th>
               <th class="text-center">출발 시간</th>
+              <th class="text-center">도착 시간</th>
               <th class="text-center">소요 시간</th>
               <th class="text-center">지연 시간</th>
               <th class="text-center">도보 시간</th>
@@ -93,6 +94,7 @@
               <td>{{ schedule.startLocation }}</td>
               <td>{{ schedule.endLocation }}</td>
               <td class="text-center">{{ schedule.departureTime }}</td>
+              <td class="text-center">{{ calculateArrivalTime(schedule) }}</td>
               <td class="text-center">{{ schedule.duration }}분</td>
               <td class="text-center">{{ schedule.trafficDelay }}분</td>
               <td class="text-center">{{ schedule.walkDuration }}분</td>
@@ -474,6 +476,23 @@ export default {
 
     updateUnreadCount() {
       this.unreadFeedbackCount = this.feedbacks.filter(f => !f.isResolved).length;
+    },
+
+    calculateArrivalTime(schedule) {
+      // HH:mm 형식의 출발 시간을 Date 객체로 변환
+      const [hours, minutes] = schedule.departureTime.split(':');
+      const departureDate = new Date();
+      departureDate.setHours(parseInt(hours));
+      departureDate.setMinutes(parseInt(minutes));
+      
+      // 소요 시간(분)을 더함
+      const totalMinutes = parseInt(schedule.duration) + 
+                         parseInt(schedule.trafficDelay) + 
+                         parseInt(schedule.walkDuration);
+      departureDate.setMinutes(departureDate.getMinutes() + totalMinutes);
+      
+      // HH:mm 형식으로 반환
+      return `${String(departureDate.getHours()).padStart(2, '0')}:${String(departureDate.getMinutes()).padStart(2, '0')}`;
     }
   },
 
@@ -507,13 +526,20 @@ export default {
 
       // 정렬 로직 적용
       return filtered.sort((a, b) => {
+        // 1. 셔틀을 상단에 배치
         if (a.routeType !== b.routeType) {
           return a.routeType === 'SHUTTLE' ? -1 : 1;
         }
+        
+        // 2. 출발지 기준 그룹핑
         if (a.startLocation !== b.startLocation) {
           return a.startLocation.localeCompare(b.startLocation);
         }
-        return a.departureTime.localeCompare(b.departureTime);
+        
+        // 3. 도착 시간 기준 정렬
+        const arrivalTimeA = this.calculateArrivalTime(a);
+        const arrivalTimeB = this.calculateArrivalTime(b);
+        return arrivalTimeA.localeCompare(arrivalTimeB);
       });
     },
 

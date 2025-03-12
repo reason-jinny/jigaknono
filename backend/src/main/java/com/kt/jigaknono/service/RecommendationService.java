@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -25,34 +26,11 @@ public class RecommendationService {
                 .plusMinutes(Optional.ofNullable(schedule.getTrafficDelay()).orElse(0))
                 .plusMinutes(Optional.ofNullable(schedule.getWalkDuration()).orElse(0));
     }
-
-    // // 🔄 경로 추천 및 출발 시간 계산
-    // public Map<String, Object> recommendRoute(String currentLocation, String targetArriavalTimeStr, int weatherDelay) {
-    //     LocalTime targetArrivalTime = LocalTime.parse(targetArriavalTimeStr);
-    //     String mappedLocation = mapLocation(currentLocation);
-
-    //     Optional<TransportSchedule> optionalSchedule = transportScheduleRepository
-    //         .findTopByStartLocationContainingAndCalculatedArrivalTimeBeforeOrderByDepartureTimeDesc(
-    //             mappedLocation, targetArrivalTime);
-
-    //     return optionalSchedule.map(schedule -> {
-    //         Map<String, Object> result = new HashMap<>();
-    //         result.put("departureTime", schedule.getDepartureTime());
-    //         result.put("arrivalTime", calculateArrivalTime(schedule).plusMinutes(weatherDelay));
-    //         result.put("startLocation", schedule.getStartLocation());
-    //         result.put("routeNumber", schedule.getRouteNumber());
-    //         result.put("recommendedRoute", schedule.getRouteType() + " " + schedule.getRouteNumber());
-    //         result.put("status", "success");
-    //         return result;
-    //     }).orElseGet(() -> createErrorResult("적절한 경로를 찾을 수 없습니다."));
-    // }
+    
     // 🔄 경로 추천 및 출발 시간 계산
-    public Map<String, Object> recommendRoute(String currentLocation, String targetArriavalTimeStr, int weatherDelay) {
+    public Map<String, Object> recommendRoute(String currentLocation, String targetArriavalTimeStr, int weatherDelay, boolean preferShuttle) {
         LocalTime targetArrivalTime = LocalTime.parse(targetArriavalTimeStr);
-
-        // 날씨 지연을 고려하여 실제 목표 도착 시간을 더 일찍으로 조정
         LocalTime adjustedTargetTime = targetArrivalTime.minusMinutes(weatherDelay);
-
         String mappedLocation = mapLocation(currentLocation);
 
         Optional<TransportSchedule> optionalSchedule = transportScheduleRepository
@@ -60,10 +38,28 @@ public class RecommendationService {
                         mappedLocation, adjustedTargetTime);
 
         return optionalSchedule.map(schedule -> {
+            // 셔틀 선호 옵션이 켜져있고, 현재 스케줄이 셔틀이 아닌 경우
+            if (preferShuttle && !isShuttle(schedule.getRouteNumber())) {
+                // 다른 셔틀 스케줄을 찾아보기
+                Optional<TransportSchedule> shuttleSchedule = transportScheduleRepository.findAll().stream()
+                        .filter(s -> s.getStartLocation().contains(mappedLocation))
+                        .filter(s -> isShuttle(s.getRouteNumber()))
+                        .filter(s -> {
+                            LocalTime arrival = calculateArrivalTime(s);
+                            return !arrival.isAfter(adjustedTargetTime);
+                        })
+                        .max(Comparator.comparing(TransportSchedule::getDepartureTime));
+
+                if (shuttleSchedule.isPresent()) {
+                    schedule = shuttleSchedule.get();
+                } else {
+                    return createErrorResult("해당 시간에 이용 가능한 셔틀이 없습니다.\n일반 버스도 확인해보시겠어요? 🚌");
+                }
+            }
+
             Map<String, Object> result = new HashMap<>();
             result.put("departureTime", schedule.getDepartureTime());
             
-            // 버스 하차 시간 계산 (도보 시간 제외)
             LocalTime busArrivalTime = schedule.getDepartureTime()
                 .plusMinutes(Optional.ofNullable(schedule.getDuration()).orElse(0))
                 .plusMinutes(Optional.ofNullable(schedule.getTrafficDelay()).orElse(0));
@@ -77,7 +73,7 @@ public class RecommendationService {
             result.put("recommendedRoute", schedule.getRouteType() + " " + schedule.getRouteNumber());
             result.put("status", "success");
             return result;
-        }).orElseGet(() -> createErrorResult("적절한 경로를 찾을 수 없습니다."));
+        }).orElseGet(() -> createErrorResult("너무 이른 시간에는 교통편이 없어요😭"));
     }
 
     private String mapLocation(String location) {
@@ -89,6 +85,11 @@ public class RecommendationService {
             default:
                 return location;
         }
+    }
+
+    private boolean isShuttle(String routeNumber) {
+        return routeNumber.toLowerCase().contains("kt") || 
+               routeNumber.toLowerCase().contains("셔틀");
     }
 
     // 🔄 에러 메시지 생성

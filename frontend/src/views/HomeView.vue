@@ -49,6 +49,43 @@
         </label>
       </div>
     </div>
+    <div class="form-group">
+      <label class="label">
+        <p>
+          <strong>교통수단 선택</strong>
+          <span class="optional">(선택사항)</span>
+        </p>
+      </label>
+      <div class="transport-options">
+        <label class="transport-option">
+          <input 
+            type="radio" 
+            v-model="transportPreference" 
+            value="all" 
+            name="transport"
+          />
+          <span class="transport-content">
+            <i class="fas fa-bus"></i>
+            <i class="fas fa-plus" style="font-size: 0.7em; margin: 0 4px;"></i>
+            <i class="fas fa-bus-alt"></i>
+            <span class="transport-text">셔틀 + 일반버스</span>
+          </span>
+        </label>
+        <label class="transport-option">
+          <input 
+            type="radio" 
+            v-model="transportPreference" 
+            value="shuttle" 
+            name="transport"
+          />
+          <span class="transport-content">
+            <i class="fas fa-shuttle-van"></i>
+            <span class="transport-text">셔틀버스만</span>
+            <span class="kt-badge">KT</span>
+          </span>
+        </label>
+      </div>
+    </div>
     <div class="button-container">
       <button @click="getRecommendation" class="button-primary">경로 추천받기</button>
     </div>
@@ -182,7 +219,8 @@ export default {
       showValidation: false,
       showFeedbackModal: false,
       feedbackType: '',
-      feedbackContent: ''
+      feedbackContent: '',
+      transportPreference: 'all', // 기본값은 모든 교통수단
     };
   },
   watch: {
@@ -240,7 +278,8 @@ export default {
           params: {
             currentLocation: this.currentLocation,
             targetArrivalTimeStr: this.targetArrivalTimeStr,
-            weatherDelay: this.weatherDelay
+            weatherDelay: this.weatherDelay,
+            preferShuttle: this.transportPreference === 'shuttle'
           },
         });
         
@@ -648,5 +687,65 @@ export default {
   margin-top: 8px;
   padding-top: 8px;
   border-top: 1px dashed #ddd;
+}
+
+.transport-options {
+  display: flex;
+  gap: 16px;
+  margin: 10px 0;
+}
+
+.transport-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.transport-content {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: #f3f4f6;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.transport-option input[type="radio"] {
+  display: none;
+}
+
+.transport-option input[type="radio"]:checked + .transport-content {
+  background-color: #dbeafe;
+  border: 1px solid #93c5fd;
+}
+
+.transport-text {
+  margin-left: 8px;
+  font-size: 0.95em;
+  color: #4b5563;
+}
+
+.transport-option i {
+  color: #4b5563;
+}
+
+.transport-option input[type="radio"]:checked + .transport-content i,
+.transport-option input[type="radio"]:checked + .transport-content .transport-text {
+  color: #2563eb;
+}
+
+.kt-badge {
+  background-color: #2563eb;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  margin-left: 6px;
+}
+
+.transport-option:hover .transport-content {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 </style>

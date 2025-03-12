@@ -22,13 +22,15 @@ public class RecommendationController {
     public ResponseEntity<Map<String, Object>> getRecommendation(
             @RequestParam String currentLocation,
             @RequestParam String targetArrivalTimeStr,
-            @RequestParam(required = false, defaultValue = "0") int weatherDelay) {
+            @RequestParam(required = false, defaultValue = "0") int weatherDelay,
+            @RequestParam(required = false, defaultValue = "false") boolean preferShuttle) {
 
         // 🔄 추천 경로 및 시간 계산
         Map<String, Object> result = recommendationService.recommendRoute(
             currentLocation, 
             targetArrivalTimeStr,
-            weatherDelay
+            weatherDelay,
+            preferShuttle
         );
 
         // 🔄 에러 처리 및 응답
